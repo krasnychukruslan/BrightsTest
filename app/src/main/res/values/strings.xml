@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BrightsTest</string>
+    <string name="step_counter">Step Counter</string>
+    <string name="today">Today :</string>
+</resources>
