@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_margin="10dp">
+        android:layout_margin="8dp">
         <Button
             android:id="@+id/btnStart"
             android:layout_width="50dp"
@@ -35,7 +35,6 @@
             android:layout_height="50dp"
             android:background="@android:drawable/ic_media_pause"
             android:shadowColor="@color/colorWhite"/>
-
     </LinearLayout>
 
     <FrameLayout
@@ -63,4 +62,41 @@
             android:text="0"/>
     </FrameLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.4"
+                android:text="@string/date"
+                android:gravity="center"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.3"
+                android:text="@string/steps"
+                android:gravity="center"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.3"
+                android:text="@string/meter"
+                android:gravity="center"/>
+        </LinearLayout>
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerMain"
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorWhite"/>
+    </LinearLayout>
 </LinearLayout>

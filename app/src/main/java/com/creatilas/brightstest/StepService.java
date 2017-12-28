@@ -128,18 +128,18 @@ public class StepService extends Service {
                 Defaults.APPLICATION_ID, Defaults.API_KEY);
 
         HashMap<String, String> testObject = new HashMap<>();
-        testObject.put("steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-        testObject.put("deviceId", Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
-        testObject.put("currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
-        Backendless.Data.of("user_step").save(testObject, new AsyncCallback<Map>() {
+        testObject.put(Defaults.STEPS, String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+        testObject.put(Defaults.DEVICE_ID, Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
+        testObject.put(Defaults.CURRENT_DATE, sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
+        Backendless.Data.of(Defaults.TABLE_NAME).save(testObject, new AsyncCallback<Map>() {
             @Override
             public void handleResponse(Map response) {
-                Log.d("Send", "Steps");
+                Log.d("setSteps", "Create Steps");
             }
 
             @Override
             public void handleFault(BackendlessFault fault) {
-                Log.e("MYAPP", "Server reported an error " + fault.getMessage());
+                Log.e("setSteps", "Server reported an error " + fault.getMessage());
             }
         });
     }
@@ -152,33 +152,32 @@ public class StepService extends Service {
         final DataQueryBuilder dataQueryBuilder = DataQueryBuilder.create();
         dataQueryBuilder.setWhereClause(whereClause);
         Backendless.Persistence.of("user_step").find(dataQueryBuilder,
-                new AsyncCallback<List<Map>>() {
-                    @Override
-                    public void handleResponse(List<Map> found) {
-                        if (found.size() != 0) {
-                            HashMap<String, String> update = new HashMap<>();
-                            update.put("steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-                            update.put("deviceId", MainActivity.androidId);
-                            update.put("currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
-                            update.put("objectId", getObjectId(found));
-                            Backendless.Data.of("user_step").save(update, new AsyncCallback<Map>() {
-                                public void handleResponse(Map saved) {
-                                    Log.d("qqqq", "update");
-                                }
+            new AsyncCallback<List<Map>>() {
+                @Override
+                public void handleResponse(List<Map> found) {
+                    if (found.size() != 0) {
+                        HashMap<String, String> update = new HashMap<>();
+                        update.put(Defaults.STEPS, String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+                        update.put(Defaults.DEVICE_ID, MainActivity.androidId);
+                        update.put(Defaults.CURRENT_DATE, sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
+                        update.put("objectId", getObjectId(found));
+                        Backendless.Data.of("user_step").save(update, new AsyncCallback<Map>() {
+                            public void handleResponse(Map saved) {
+                                Log.e("updateSteps", "update");
+                            }
 
-                                @Override
-                                public void handleFault(BackendlessFault fault) {
-                                    // an error has occurred, the error code can be retrieved with fault.getCode()
-                                }
-                            });
-                        }
+                            @Override
+                            public void handleFault(BackendlessFault fault) {
+                                Log.e("updateSteps", "update error " + fault.getMessage());
+                            }
+                        });
                     }
-
-                    @Override
-                    public void handleFault(BackendlessFault fault) {
-                        Log.d("qqqqq", "error");
-                    }
-                });
+                }
+                @Override
+                public void handleFault(BackendlessFault fault) {
+                    Log.d("updateSteps", "error " + fault.getMessage());
+                }
+            });
     }
 
     private static String getObjectId(List<Map> maps) {

@@ -10,18 +10,22 @@ import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
 import com.backendless.Backendless;
-import com.backendless.IDataStore;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import static com.creatilas.brightstest.StepService.SHAREPREFERENCESTEPSDAY;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -33,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private Button start;
     private Button pause;
+    private List<ModelDateStep> listDateStep;
+    private RecyclerView mRecycler;
 
     @SuppressLint("HardwareIds")
     @Override
@@ -61,6 +67,10 @@ public class MainActivity extends AppCompatActivity {
                 checkStartService();
             }
         });
+
+        mRecycler = findViewById(R.id.recyclerMain);
+        mRecycler.setLayoutManager(new LinearLayoutManager(this));
+
         intentFilter = new IntentFilter(BROADCAST_ACTION);
     }
 
@@ -68,9 +78,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         checkStartService();
-        textView.setText(String.valueOf(sharedPreferences.getFloat(StepService.SHAREPREFERENCESTEPSDAY, 0)));
+        textView.setText(String.valueOf(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0)));
         registerReceiver(receiver, intentFilter);
-        getSteps();
+        getDateSteps();
     }
 
     @Override
@@ -108,25 +118,38 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private void getSteps() {
-        IDataStore<Map> contactStorage = Backendless.Data.of( "user_step" );
+    private void getDateSteps() {
+        Backendless.setUrl(Defaults.SERVER_URL);
+        Backendless.initApp(getApplicationContext(),
+                Defaults.APPLICATION_ID, Defaults.API_KEY);
+        String whereClause = "deviceId = '" + MainActivity.androidId + "'";
+        final DataQueryBuilder dataQueryBuilder = DataQueryBuilder.create();
+        dataQueryBuilder.setWhereClause(whereClause);
+        Backendless.Persistence.of("user_step").find(dataQueryBuilder,
+            new AsyncCallback<List<Map>>() {
+                @Override
+                public void handleResponse(List<Map> found) {
+                    if (found.size() != 0) {
+                        RecyclerView.Adapter adapter = new DateStepAdapter(getDate(found));
+                        mRecycler.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+                @Override
+                public void handleFault(BackendlessFault fault) {
+                    Log.e("error getDateSteps", "error");
+                }
+            });
+    }
 
-        DataQueryBuilder queryBuilder = DataQueryBuilder.create();
-        queryBuilder.setWhereClause( "deviceId = '" + androidId + "'");
-        contactStorage.getObjectCount( queryBuilder, new AsyncCallback<Integer>()
-        {
-            @Override
-            public void handleResponse( Integer objectCount )
-            {
-                Log.i( "MYAPP", "There are " + objectCount + " objects matching the query" );
-            }
-
-            @Override
-            public void handleFault( BackendlessFault fault )
-            {
-                Log.e( "MYAPP", "Server reported an error - " + fault.getMessage() );
-            }
-        } );
+    private List<ModelDateStep> getDate(List<Map> maps) {
+        listDateStep = new ArrayList<>();
+        for (Map current : maps) {
+            Log.d("date", String.valueOf(current.get("currentDate")));
+            Log.d("steps", String.valueOf(current.get("steps")));
+            listDateStep.add(new ModelDateStep(String.valueOf(current.get("currentDate")), String.valueOf(current.get("steps"))));
+        }
+        return listDateStep;
     }
 }
 
