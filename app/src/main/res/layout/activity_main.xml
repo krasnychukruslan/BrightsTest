@@ -35,6 +35,7 @@
             android:layout_height="50dp"
             android:background="@android:drawable/ic_media_pause"
             android:shadowColor="@color/colorWhite"/>
+
     </LinearLayout>
 
     <FrameLayout

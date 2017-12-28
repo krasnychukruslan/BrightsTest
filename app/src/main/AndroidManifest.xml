@@ -16,6 +16,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+        <service
+            android:enabled="true"
+            android:name="com.creatilas.brightstest.StepService"/>
+
+    </application>
 </manifest>
