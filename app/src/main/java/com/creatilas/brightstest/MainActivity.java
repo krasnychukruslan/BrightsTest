@@ -15,8 +15,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.backendless.Backendless;
+import com.backendless.exceptions.BackendlessFault;
+
+
 public class MainActivity extends AppCompatActivity {
 
+    public static String androidId;
     private TextView textView;
     public static final String BROADCAST_ACTION = "com.creatilas.brightstest";
     private IntentFilter intentFilter;
@@ -24,11 +29,13 @@ public class MainActivity extends AppCompatActivity {
     private Button start;
     private Button pause;
 
+    @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        Backendless.initApp( getApplicationContext(), Defaults.APPLICATION_ID, Defaults.API_KEY);
+        androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         Log.d("DeviceId", androidId);
         textView = findViewById(R.id.textViewSteps);
         sharedPreferences = getSharedPreferences(StepService.SHAREPREFERENCESERVICE, MODE_PRIVATE);
@@ -72,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void checkStartService () {
+    private void checkStartService() {
         if (isMyServiceRunning(StepService.class)) {
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
@@ -81,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
             pause.setVisibility(View.GONE);
         }
     }
+
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (manager != null) {
@@ -92,5 +100,22 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
+//    private void getSteps() {
+//        Backendless.setUrl(Defaults.SERVER_URL);
+//        Backendless.initApp(getApplicationContext(),
+//                Defaults.APPLICATION_ID, Defaults.API_KEY);
+//        AsyncCallback<BackendlessCollection<Model>> callback = new AsyncCallback<BackendlessCollection<Model>>() {
+//            @Override
+//            public void handleResponse(BackendlessCollection<Model> response) {
+//
+//            }
+//
+//            @Override
+//            public void handleFault(BackendlessFault fault) {
+//            }
+//        };
+//        Backendless.Persistence.of(Model.class).find(callback);
+//    }
 }
 
