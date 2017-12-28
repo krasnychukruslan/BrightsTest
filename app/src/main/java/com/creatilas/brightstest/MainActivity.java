@@ -16,7 +16,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.backendless.Backendless;
+import com.backendless.IDataStore;
+import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.persistence.DataQueryBuilder;
+
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -65,12 +70,14 @@ public class MainActivity extends AppCompatActivity {
         checkStartService();
         textView.setText(String.valueOf(sharedPreferences.getFloat(StepService.SHAREPREFERENCESTEPSDAY, 0)));
         registerReceiver(receiver, intentFilter);
+        getSteps();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(receiver);
+        if (receiver.getDebugUnregister())
+            unregisterReceiver(receiver);
     }
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -101,21 +108,25 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-//    private void getSteps() {
-//        Backendless.setUrl(Defaults.SERVER_URL);
-//        Backendless.initApp(getApplicationContext(),
-//                Defaults.APPLICATION_ID, Defaults.API_KEY);
-//        AsyncCallback<BackendlessCollection<Model>> callback = new AsyncCallback<BackendlessCollection<Model>>() {
-//            @Override
-//            public void handleResponse(BackendlessCollection<Model> response) {
-//
-//            }
-//
-//            @Override
-//            public void handleFault(BackendlessFault fault) {
-//            }
-//        };
-//        Backendless.Persistence.of(Model.class).find(callback);
-//    }
+    private void getSteps() {
+        IDataStore<Map> contactStorage = Backendless.Data.of( "user_step" );
+
+        DataQueryBuilder queryBuilder = DataQueryBuilder.create();
+        queryBuilder.setWhereClause( "deviceId = '" + androidId + "'");
+        contactStorage.getObjectCount( queryBuilder, new AsyncCallback<Integer>()
+        {
+            @Override
+            public void handleResponse( Integer objectCount )
+            {
+                Log.i( "MYAPP", "There are " + objectCount + " objects matching the query" );
+            }
+
+            @Override
+            public void handleFault( BackendlessFault fault )
+            {
+                Log.e( "MYAPP", "Server reported an error - " + fault.getMessage() );
+            }
+        } );
+    }
 }
 

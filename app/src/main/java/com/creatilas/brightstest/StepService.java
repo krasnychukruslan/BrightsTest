@@ -1,6 +1,5 @@
 package com.creatilas.brightstest;
 
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -13,13 +12,11 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
-import com.backendless.persistence.BackendlessDataQuery;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.text.DateFormat;
@@ -112,7 +109,7 @@ public class StepService extends Service {
 
     private void checkDay() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if (!sharedPreferences.getString(SHAREPREFERENCECURRENTDAY,"").equals(getDay())) {
+        if (!sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, "").equals(getDay())) {
             editor.putString(SHAREPREFERENCECURRENTDAY, getDay()).apply();
             editor.putFloat(SHAREPREFERENCESTEPSDAY, 0).apply();
             setSteps();
@@ -131,10 +128,10 @@ public class StepService extends Service {
                 Defaults.APPLICATION_ID, Defaults.API_KEY);
 
         HashMap<String, String> testObject = new HashMap<>();
-        testObject.put( "steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-        testObject.put( "deviceId", Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
-        testObject.put( "currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
-        Backendless.Data.of( "user_step" ).save(testObject, new AsyncCallback<Map>() {
+        testObject.put("steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+        testObject.put("deviceId", Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
+        testObject.put("currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
+        Backendless.Data.of("user_step").save(testObject, new AsyncCallback<Map>() {
             @Override
             public void handleResponse(Map response) {
                 Log.d("Send", "Steps");
@@ -142,7 +139,7 @@ public class StepService extends Service {
 
             @Override
             public void handleFault(BackendlessFault fault) {
-                Log.e( "MYAPP", "Server reported an error " + fault.getMessage() );
+                Log.e("MYAPP", "Server reported an error " + fault.getMessage());
             }
         });
     }
@@ -151,46 +148,45 @@ public class StepService extends Service {
         Backendless.setUrl(Defaults.SERVER_URL);
         Backendless.initApp(getApplicationContext(),
                 Defaults.APPLICATION_ID, Defaults.API_KEY);
-        String whereClause = "currentDate = " + getDay();
-        DataQueryBuilder dataQueryBuilder = DataQueryBuilder.create();
+        String whereClause = "deviceId = '" + MainActivity.androidId + "'" + " AND currentDate = '" + this.getDay() + "'";
+        final DataQueryBuilder dataQueryBuilder = DataQueryBuilder.create();
         dataQueryBuilder.setWhereClause(whereClause);
-//        List<Map> result = Backendless.Persistence.of( "user_step" ).find(dataQueryBuilder);
-//        BackendlessDataQuery dataQuery = new BackendlessDataQuery();
-//        dataQuery.setWhereClause( whereClause );
-        Backendless.Persistence.of( "user_step" ).find(dataQueryBuilder,
-            new AsyncCallback<List<Map>>(){
-                @Override
-                public void handleResponse( List<Map> foundContacts )
-                {
-                    Log.d("qqqqq", "good");
-                    HashMap<String, String> update = new HashMap<>();
-                    update.put( "steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-                    update.put( "objectId", foundContacts.get(0).toString());
-                    update.put( "deviceId", MainActivity.androidId);
-                    update.put( "currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
-                    Backendless.Data.of("user_step").save(update, new AsyncCallback<Map>() {
-                        public void handleResponse(Map saved)
-                        {
-                            Log.d("qqqq", "update");
-                        }
-                        @Override
-                        public void handleFault( BackendlessFault fault )
-                        {
-                            // an error has occurred, the error code can be retrieved with fault.getCode()
-                        }
-                    });
+        Backendless.Persistence.of("user_step").find(dataQueryBuilder,
+                new AsyncCallback<List<Map>>() {
+                    @Override
+                    public void handleResponse(List<Map> found) {
+                        if (found.size() != 0) {
+                            HashMap<String, String> update = new HashMap<>();
+                            update.put("steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+                            update.put("deviceId", MainActivity.androidId);
+                            update.put("currentDate", sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, ""));
+                            update.put("objectId", getObjectId(found));
+                            Backendless.Data.of("user_step").save(update, new AsyncCallback<Map>() {
+                                public void handleResponse(Map saved) {
+                                    Log.d("qqqq", "update");
+                                }
 
-                }
-                @Override
-                public void handleFault( BackendlessFault fault )
-                {
-                    // an error has occurred, the error code can be retrieved with fault.getCode()
-                    Log.d("qqqqq", "error");
-                }
-            });
+                                @Override
+                                public void handleFault(BackendlessFault fault) {
+                                    // an error has occurred, the error code can be retrieved with fault.getCode()
+                                }
+                            });
+                        }
+                    }
 
-//        HashMap<String, Object> testObject = new HashMap<>();
-//        testObject.put( "steps", String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-//        Backendless.Data.of( "user_step" ).update(MainActivity.androidId, testObject);
+                    @Override
+                    public void handleFault(BackendlessFault fault) {
+                        Log.d("qqqqq", "error");
+                    }
+                });
+    }
+
+    private static String getObjectId(List<Map> maps) {
+        String id = null;
+        for (Map current : maps) {
+            Log.i("device", String.valueOf(current.get("objectId")));
+            id = String.valueOf(current.get("objectId"));
+        }
+        return id;
     }
 }
