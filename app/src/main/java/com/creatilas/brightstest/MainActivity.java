@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import static com.creatilas.brightstest.StepService.SHAREPREFERENCESTEPSDAY;
 
 
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Backendless.initApp( getApplicationContext(), Defaults.APPLICATION_ID, Defaults.API_KEY);
+        Backendless.initApp(getApplicationContext(), Defaults.APPLICATION_ID, Defaults.API_KEY);
         androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         Log.d("DeviceId", androidId);
         textView = findViewById(R.id.textViewSteps);
@@ -93,11 +95,12 @@ public class MainActivity extends AppCompatActivity {
     private final StepBroadCastReceiver receiver = new StepBroadCastReceiver() {
         public void onReceive(Context context, Intent intent) {
             textView.setText(intent.getStringExtra(StepService.ACTION_UPDATE));
+            checkStartService();
         }
     };
 
     private void checkStartService() {
-        if (isMyServiceRunning(StepService.class) || sharedPreferences.getBoolean(StepService.SHAREPREFERENCESTARTSERVICE, false)) {
+        if (isMyServiceRunning(StepService.class)) {
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
         } else {
@@ -126,20 +129,21 @@ public class MainActivity extends AppCompatActivity {
         final DataQueryBuilder dataQueryBuilder = DataQueryBuilder.create();
         dataQueryBuilder.setWhereClause(whereClause);
         Backendless.Persistence.of("user_step").find(dataQueryBuilder,
-            new AsyncCallback<List<Map>>() {
-                @Override
-                public void handleResponse(List<Map> found) {
-                    if (found.size() != 0) {
-                        RecyclerView.Adapter adapter = new DateStepAdapter(getDate(found));
-                        mRecycler.setAdapter(adapter);
-                        adapter.notifyDataSetChanged();
+                new AsyncCallback<List<Map>>() {
+                    @Override
+                    public void handleResponse(List<Map> found) {
+                        if (found.size() != 0) {
+                            RecyclerView.Adapter adapter = new DateStepAdapter(getDate(found));
+                            mRecycler.setAdapter(adapter);
+                            adapter.notifyDataSetChanged();
+                        }
                     }
-                }
-                @Override
-                public void handleFault(BackendlessFault fault) {
-                    Log.e("error getDateSteps", "error");
-                }
-            });
+
+                    @Override
+                    public void handleFault(BackendlessFault fault) {
+                        Log.e("error getDateSteps", "error");
+                    }
+                });
     }
 
     private List<ModelDateStep> getDate(List<Map> maps) {
