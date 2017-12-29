@@ -105,6 +105,8 @@ public class StepAccelerometerService extends Service implements SensorEventList
         editor.putFloat(SHAREPREFERENCESTEPSDAY, sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0) + 1).apply();
         Intent updateIntent = new Intent(MainActivity.BROADCAST_ACTION);
         updateIntent.putExtra(ACTION_UPDATE, String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+        checkDay();
+        updateSteps();
         sendBroadcast(updateIntent);
     }
 
@@ -193,15 +195,8 @@ public class StepAccelerometerService extends Service implements SensorEventList
 
     class MyRun implements Runnable {
         public void run() {
-            checkDay();
-            if (sensorManager != null) {
-                if (sharedPreferences.getBoolean(SHAREPREFERENCESTARTSERVICE, false)) {
-                    updateSteps();
-                    Log.d("steps", String.valueOf(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0)));
-                }
-            } else {
-                Log.d("SensorManagerAcc", "sensorManager = 0");
-            }
+            updateSteps();
+            Log.d("steps", String.valueOf(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0)));
         }
     }
 }

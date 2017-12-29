@@ -80,35 +80,6 @@ public class StepService extends Service {
         editor.putBoolean(SHAREPREFERENCESTARTSERVICE, false).apply();
     }
 
-    class MyRun implements Runnable {
-        public void run() {
-            checkDay();
-            if (sensorManager != null) {
-                Sensor senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-                sensorManager.registerListener(new SensorEventListener() {
-                    @Override
-                    public void onSensorChanged(SensorEvent sensorEvent) {
-                        text = String.valueOf(sensorEvent.values[0]);
-                        if (sharedPreferences.getBoolean(SHAREPREFERENCESTARTSERVICE, false)) {
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putFloat(SHAREPREFERENCESTEPSDAY, sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0) + 1).apply();
-                            Intent updateIntent = new Intent(MainActivity.BROADCAST_ACTION);
-                            updateSteps();
-                            updateIntent.putExtra(ACTION_UPDATE, String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
-                            sendBroadcast(updateIntent);
-                            Log.d("test", text);
-                        }
-                    }
-
-                    @Override
-                    public void onAccuracyChanged(Sensor sensor, int i) {
-
-                    }
-                }, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-            }
-        }
-    }
-
     private void checkDay() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if (!sharedPreferences.getString(SHAREPREFERENCECURRENTDAY, "").equals(getDay())) {
@@ -190,5 +161,34 @@ public class StepService extends Service {
             id = String.valueOf(current.get("objectId"));
         }
         return id;
+    }
+
+    class MyRun implements Runnable {
+        public void run() {
+            if (sensorManager != null) {
+                Sensor senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+                sensorManager.registerListener(new SensorEventListener() {
+                    @Override
+                    public void onSensorChanged(SensorEvent sensorEvent) {
+                        text = String.valueOf(sensorEvent.values[0]);
+                        if (sharedPreferences.getBoolean(SHAREPREFERENCESTARTSERVICE, false)) {
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putFloat(SHAREPREFERENCESTEPSDAY, sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0) + 1).apply();
+                            Intent updateIntent = new Intent(MainActivity.BROADCAST_ACTION);
+                            updateIntent.putExtra(ACTION_UPDATE, String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
+                            sendBroadcast(updateIntent);
+                            checkDay();
+                            updateSteps();
+                            Log.d("steps", text);
+                        }
+                    }
+
+                    @Override
+                    public void onAccuracyChanged(Sensor sensor, int i) {
+
+                    }
+                }, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+        }
     }
 }
