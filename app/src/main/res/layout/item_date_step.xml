@@ -15,7 +15,7 @@
             android:layout_weight="0.4"
             android:text="@string/date"
             android:textColor="@color/colorPrimary"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:gravity="center"/>
         <TextView
             android:id="@+id/itemStep"
@@ -24,7 +24,7 @@
             android:layout_weight="0.3"
             android:text="@string/steps"
             android:textColor="@color/colorPrimary"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:gravity="center"/>
         <TextView
             android:id="@+id/itemMeter"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:textColor="@color/colorPrimary"
-            android:textSize="20sp"
+            android:textSize="17sp"
             android:text="@string/meter"
             android:gravity="center"/>
     </LinearLayout>

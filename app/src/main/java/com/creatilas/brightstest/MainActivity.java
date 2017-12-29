@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         checkStartService();
-        textView.setText(String.valueOf(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0)));
+        textView.setText(String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
         registerReceiver(receiver, intentFilter);
         getDateSteps();
     }
@@ -90,14 +90,14 @@ public class MainActivity extends AppCompatActivity {
             unregisterReceiver(receiver);
     }
 
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+    private final StepBroadCastReceiver receiver = new StepBroadCastReceiver() {
         public void onReceive(Context context, Intent intent) {
             textView.setText(intent.getStringExtra(StepService.ACTION_UPDATE));
         }
     };
 
     private void checkStartService() {
-        if (isMyServiceRunning(StepService.class)) {
+        if (isMyServiceRunning(StepService.class) || sharedPreferences.getBoolean(StepService.SHAREPREFERENCESTARTSERVICE, false)) {
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
         } else {
