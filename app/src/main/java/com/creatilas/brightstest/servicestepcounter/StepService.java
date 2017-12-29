@@ -1,4 +1,4 @@
-package com.creatilas.brightstest;
+package com.creatilas.brightstest.servicestepcounter;
 
 import android.app.Service;
 import android.content.Context;
@@ -18,6 +18,8 @@ import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
+import com.creatilas.brightstest.Defaults;
+import com.creatilas.brightstest.MainActivity;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

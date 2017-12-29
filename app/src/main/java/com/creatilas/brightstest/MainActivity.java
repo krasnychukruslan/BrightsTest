@@ -2,7 +2,6 @@ package com.creatilas.brightstest;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -24,12 +23,14 @@ import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
+import com.creatilas.brightstest.servicestepaccelerometer.StepAccelerometerService;
+import com.creatilas.brightstest.servicestepcounter.StepService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.creatilas.brightstest.StepService.SHAREPREFERENCESTEPSDAY;
+import static com.creatilas.brightstest.servicestepcounter.StepService.SHAREPREFERENCESTEPSDAY;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private Button pause;
     private List<ModelDateStep> listDateStep;
     private RecyclerView mRecycler;
+    private SensorManager sensorManager;
 
     @SuppressLint("HardwareIds")
     @Override
@@ -58,19 +60,14 @@ public class MainActivity extends AppCompatActivity {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (showError()) {
-                    startService(new Intent(view.getContext(), StepService.class));
-                    registerReceiver(receiver, intentFilter);
-                    checkStartService();
-                }
+                chooseSensorManager();
             }
         });
         pause = findViewById(R.id.btnPause);
         pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopService(new Intent(view.getContext(), StepService.class));
-                checkStartService();
+                stopService();
             }
         });
 
@@ -82,7 +79,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        checkStartService();
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
+                checkStartService();
+            } else if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+                checkStartServiceAccelerometer();
+            }
+        }
         textView.setText(String.valueOf(Math.round(sharedPreferences.getFloat(SHAREPREFERENCESTEPSDAY, 0))));
         registerReceiver(receiver, intentFilter);
         getDateSteps();
@@ -95,34 +99,62 @@ public class MainActivity extends AppCompatActivity {
             unregisterReceiver(receiver);
     }
 
-    private boolean showError () {
-        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        Sensor senAccelerometer = null;
+    private void chooseSensorManager() {
         if (sensorManager != null) {
-            senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            if (senAccelerometer == null) {
-                Toast.makeText(this, "sorry, we can't count your`s steps. Device doesn't supported SENSOR what we use.",
-                        Toast.LENGTH_SHORT).show();
-                return false;
-            } else {
-                return true;
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
+                startService(new Intent(this, StepService.class));
+                registerReceiver(receiver, intentFilter);
+                checkStartService();
+            } else if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+                startService(new Intent(this, StepAccelerometerService.class));
+                registerReceiver(receiver, intentFilter);
+                checkStartServiceAccelerometer();
             }
         } else {
-            Toast.makeText(this, "sorry, we can't count your`s steps. Device doesn't supported SENSOR SERVICE.",
+            Toast.makeText(this, "sorry, we can't count your steps. Device doesn't supported SENSOR SERVICE.",
                     Toast.LENGTH_SHORT).show();
-            return false;
+        }
+    }
+
+    private void stopService() {
+        if (sensorManager != null) {
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
+                stopService(new Intent(this, StepService.class));
+                checkStartService();
+            } else if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+                stopService(new Intent(this, StepAccelerometerService.class));
+                checkStartService();
+            }
         }
     }
 
     private final StepBroadCastReceiver receiver = new StepBroadCastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            textView.setText(intent.getStringExtra(StepService.ACTION_UPDATE));
-            checkStartService();
+            if (sensorManager != null) {
+                if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
+                    textView.setText(intent.getStringExtra(StepService.ACTION_UPDATE));
+                    checkStartService();
+                } else if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+                    textView.setText(intent.getStringExtra(StepService.ACTION_UPDATE));
+                    checkStartServiceAccelerometer();
+                }
+            }
+
         }
     };
 
     private void checkStartService() {
         if (isMyServiceRunning(StepService.class)) {
+            start.setVisibility(View.GONE);
+            pause.setVisibility(View.VISIBLE);
+        } else {
+            start.setVisibility(View.VISIBLE);
+            pause.setVisibility(View.GONE);
+        }
+    }
+
+    private void checkStartServiceAccelerometer() {
+        if (isMyServiceRunning(StepAccelerometerService.class)) {
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
         } else {

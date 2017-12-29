@@ -25,6 +25,9 @@
         </receiver>
         <service
             android:enabled="true"
-            android:name="com.creatilas.brightstest.StepService"/>
+            android:name="com.creatilas.brightstest.servicestepcounter.StepService"/>
+        <service
+            android:enabled="true"
+            android:name="com.creatilas.brightstest.servicestepaccelerometer.StepAccelerometerService"/>
     </application>
 </manifest>
