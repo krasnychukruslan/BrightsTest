@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
@@ -23,7 +26,6 @@ import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,9 +58,11 @@ public class MainActivity extends AppCompatActivity {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startService(new Intent(view.getContext(), StepService.class));
-                registerReceiver(receiver, intentFilter);
-                checkStartService();
+                if (showError()) {
+                    startService(new Intent(view.getContext(), StepService.class));
+                    registerReceiver(receiver, intentFilter);
+                    checkStartService();
+                }
             }
         });
         pause = findViewById(R.id.btnPause);
@@ -72,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
 
         mRecycler = findViewById(R.id.recyclerMain);
         mRecycler.setLayoutManager(new LinearLayoutManager(this));
-
         intentFilter = new IntentFilter(BROADCAST_ACTION);
     }
 
@@ -90,6 +93,25 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (receiver.getDebugUnregister())
             unregisterReceiver(receiver);
+    }
+
+    private boolean showError () {
+        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        Sensor senAccelerometer = null;
+        if (sensorManager != null) {
+            senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            if (senAccelerometer == null) {
+                Toast.makeText(this, "sorry, we can't count your`s steps. Device doesn't supported SENSOR what we use.",
+                        Toast.LENGTH_SHORT).show();
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            Toast.makeText(this, "sorry, we can't count your`s steps. Device doesn't supported SENSOR SERVICE.",
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
     }
 
     private final StepBroadCastReceiver receiver = new StepBroadCastReceiver() {
